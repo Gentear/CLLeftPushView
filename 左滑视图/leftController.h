@@ -10,4 +10,6 @@
 
 @interface leftController : UIViewController
 
+@property (nonatomic,copy)void (^pushNewViewController)();
+
 @end

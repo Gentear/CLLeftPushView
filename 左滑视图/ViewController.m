@@ -7,6 +7,7 @@
 //
 
 #import "ViewController.h"
+#import "rightController.h"
 #define ScreenWidth [UIScreen mainScreen].bounds.size.width
 #define ScreenHeight [UIScreen mainScreen].bounds.size.height
 #define ScreenBounds [UIScreen mainScreen].bounds
@@ -15,7 +16,8 @@
 #define TBHeight 44
 
 #define BackgroundColor [UIColor colorWithRed:226.0/255.0 green:226.0/255.0 blue:226.0/255.0 alpha:1]
-@interface ViewController ()
+@interface ViewController ()<UIGestureRecognizerDelegate>
+@property (weak,nonatomic)UIButton *tapButton;
 
 @end
 
@@ -38,18 +40,34 @@
     leftButton.frame = CGRectMake(0, 20, 40, 40);
     [leftButton setTitle:@"left" forState:UIControlStateNormal];
     [leftButton addTarget:self action:@selector(didClickLeftBarButtonAction:) forControlEvents:UIControlEventTouchUpInside];
-    [self.midController.view addSubview:leftButton];
+//    [self.midController.view addSubview:leftButton];
     
     
     //滑动手势
     UIPanGestureRecognizer *pan = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(pan:)];
-    
+    pan.delegate = self;
     [self.midController.view addGestureRecognizer:pan];
+    self.midController.view.layer.masksToBounds = NO;
+    self.midController.view.layer.shadowRadius = 10;
+    self.midController.view.layer.shadowOpacity = 0.8f;
+    self.midController.view.layer.shadowOffset = CGSizeMake(0, -3);
+    self.midController.view.layer.shadowColor = [[UIColor blackColor] CGColor];
     
-    //点击收拾
-    UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc]initWithTarget:self action:@selector(tap:)];
+    /** In the event this gets called a lot, we won't update the shadowPath
+     unless it needs to be updated (like during rotation) */
+//    if (self.midController.view.layer.shadowPath == NULL) {
+//        self.midController.view.layer.shadowPath = [[UIBezierPath bezierPathWithRect:self.midController.view.bounds] CGPath];
+//    }
     
-    [self.midController.view addGestureRecognizer:tap];
+//    //点击收拾
+//    UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc]initWithTarget:self action:@selector(tap:)];
+//    
+//    [self.midController.view addGestureRecognizer:tap];
+    [self.leftController setPushNewViewController:^(){
+        [self.midController pushViewController:[rightController alloc].init animated:YES];
+        [self popLeftView:0.3];
+        
+    }];
     
 }
 
@@ -57,7 +75,7 @@
 - (void)didClickLeftBarButtonAction:(UIBarButtonItem *)leftButton{
     
     //  用这个判断条件是为了左边视图出来后,再点击按钮能够回去
-    if (!self.midController.view.frame.origin.x == 0) {
+    if (!(self.midController.view.frame.origin.x == 0)) {
         [self popLeftView:0.3];
         
         
@@ -68,6 +86,43 @@
     
     
 }
+////- (BOOL)gestureRecognizerShouldBegin:(UIGestureRecognizer *)gestureRecognizer{
+////    //    NSString *str = [NSString stringWithUTF8String:object_getClassName(gestureRecognizer)];
+////    
+////    if ([gestureRecognizer isKindOfClass:[UIPanGestureRecognizer class]]) {
+////        return YES;
+////    }
+////    return NO;
+////}
+//- (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldReceiveTouch:(UITouch *)touch{
+////    if ([gestureRecognizer isKindOfClass:[UIPanGestureRecognizer class]]) {
+////        return YES;
+////    }
+//    
+////    if ([touch.view isKindOfClass:[UITableView class]])
+////    {
+////        return NO;
+////    }
+//    // 若为UITableViewCellContentView（即点击了tableViewCell），则不截获Touch事件
+//    if ([NSStringFromClass([touch.view class]) isEqualToString:@"UITableViewCellContentView"]) {
+//        return NO;
+//    }
+//    return YES;
+//}
+////- (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherGestureRecognizer {
+////    return YES;
+////    if ([[otherGestureRecognizer.view class] isSubclassOfClass:[UITableView class]]) {
+////        return NO;
+////    }
+////    
+////    if( [[otherGestureRecognizer.view class] isSubclassOfClass:[UITableViewCell class]] ||
+////       [NSStringFromClass([otherGestureRecognizer.view class]) isEqualToString:@"UITableViewCellScrollView"] ||
+////       [NSStringFromClass([otherGestureRecognizer.view class]) isEqualToString:@"UITableViewWrapperView"]) {
+////        
+////        return YES;
+////    }
+////    return YES;
+////}
 //点击手势
 - (void)tap:(UITapGestureRecognizer *)tap{
     [self popLeftView:0.3];
@@ -108,6 +163,8 @@
         self.midController.view.frame = CGRectMake(0, 0, ScreenWidth, ScreenHeight);
         
     } completion:^(BOOL finished) {
+        [self.tapButton removeFromSuperview];
+
     }];
     
 }
@@ -118,6 +175,11 @@
         self.midController.view.frame = CGRectMake(ScreenWidth*2/3, 0, ScreenWidth, ScreenHeight);
         
     } completion:^(BOOL finished) {
+        UIButton *button = [UIButton buttonWithType:UIButtonTypeCustom];
+        button.frame = ScreenBounds;
+        [button addTarget:self action:@selector(tap:) forControlEvents:UIControlEventTouchDown];
+        [self.midController.view addSubview:button];
+        _tapButton = button;
     }];
     
 }
